@@ -122,12 +122,41 @@ h5, h6 {
   }
 }
 
-/* Paksa semua elemen di dalam card jadi flex-column atau atur ulang lebarnya */
-.card, .card-body, .card-title, p, span {
+/* =================================================================
+   FIX UTAMA: PENANGANAN TULISAN MENUMPUK VERTIKAL DI MOBILE
+   ================================================================= */
+
+/* 1. Paksa semua container card & task list menggunakan layout fleksibel yang normal */
+.task-container, .task-card, .card, .card-body {
   display: block !important;
   width: 100% !important;
-  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* 2. Pastikan elemen teks judul tidak dipaksa tegak lurus/vertikal */
+.task-title, .card-title, h1, h2, h3, h4, h5, h6, p, span {
+  writing-mode: horizontal-tb !important; /* Mencegah tulisan memanjang ke bawah */
+  text-orientation: mixed !important;
   white-space: normal !important;
-  word-break: normal !important;
-  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  display: block !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* 3. Atur ulang tata letak item tugas di HP (±400px) agar menyamping dengan rapi */
+@media (max-width: 576px) {
+  .task-card, .task-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 12px !important;
+    gap: 8px !important;
+  }
+
+  .task-header, .task-body {
+    width: 100% !important;
+  }
 }
