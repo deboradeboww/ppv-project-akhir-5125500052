@@ -160,3 +160,27 @@ h5, h6 {
     width: 100% !important;
   }
 }
+
+/* --- HANCURKAN PAKSAAN LEBAR SEMPIT PADA TASK LIST --- */
+#taskList div, 
+#taskList span, 
+#taskList p, 
+#taskList h5, 
+.task-container div, 
+.task-item div {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  width: auto !important;
+  writing-mode: horizontal-tb !important;
+}
+
+/* Pastikan teks judul tugas tampil normal melebar ke samping */
+#taskList .card-title, 
+#taskList h5,
+.task-title {
+  display: block !important;
+  width: 100% !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
