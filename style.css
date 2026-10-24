@@ -184,3 +184,40 @@ h5, h6 {
   word-break: break-word !important;
   overflow-wrap: break-word !important;
 }
+
+/* --- PAKSA ELEMEN KARTU TUGAS MENYUSUN KE BAWAH (VERTICAL STACK) DI HP --- */
+@media (max-width: 576px) {
+  /* Ubah card dan body jadi kolom ke bawah */
+  #taskList .card, 
+  .task-card, 
+  .task-item,
+  #taskList .card-body {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Hancurkan flex horizontal bawaan pada pembungkus meta/badge */
+  #taskList .d-flex,
+  .task-meta,
+  .card-body div {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  /* Judul tugas wajib lebar penuh dan normal */
+  #taskList .card-title,
+  .task-title,
+  h5 {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+}
