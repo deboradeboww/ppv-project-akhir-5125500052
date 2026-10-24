@@ -122,16 +122,12 @@ h5, h6 {
   }
 }
 
-/* --- PERBAIKAN TOTAL TEKS MENUMPUK DI MOBILE --- */
-.card h5, 
-.card h6, 
-.card p, 
-.card span, 
-.card div,
-.task-title,
-.card-body * {
-  word-break: break-word !important;
-  overflow-wrap: break-word !important;
-  white-space: normal !important;
+/* Paksa semua elemen di dalam card jadi flex-column atau atur ulang lebarnya */
+.card, .card-body, .card-title, p, span {
+  display: block !important;
+  width: 100% !important;
   max-width: 100% !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
 }
