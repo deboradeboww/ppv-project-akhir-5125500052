@@ -488,7 +488,7 @@ input:focus, select:focus {
 .bottom-nav-item .nav-badge {
     position: absolute;
     top: 4px;
-    right: 18px;
+    right: 10px;
     background: #d81b60;
     color: white;
     font-size: 0.62rem;
@@ -723,4 +723,415 @@ input:focus, select:focus {
     color: var(--text-muted);
     font-style: italic;
     padding: 14px 10px !important;
+}
+
+/* === 11. UKURAN FONT (AKSESIBILITAS) === */
+/* Semua ukuran memakai rem, jadi cukup ubah font-size di <html> */
+html[data-font="kecil"]  { font-size: 14px; }
+html[data-font="sedang"] { font-size: 16px; }
+html[data-font="besar"]  { font-size: 19px; }
+
+/* === 12. HALAMAN PROFIL & PENGATURAN === */
+.profile-summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 10px 18px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, rgba(240, 98, 146, 0.12), rgba(255, 138, 101, 0.12));
+    border-radius: 18px;
+}
+
+.profile-summary-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--gradient-header);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    box-shadow: 0 6px 16px rgba(236, 64, 122, 0.3);
+}
+
+.profile-summary-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.profile-summary-campus {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.settings-section {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 2px solid var(--bg-pink);
+}
+
+.settings-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #d81b60;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.avatar-options {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.avatar-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--input-border);
+    background: #fff5f7;
+    color: #ec407a;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.avatar-btn:hover {
+    transform: scale(1.1);
+}
+
+.avatar-btn.active {
+    background: var(--gradient-header);
+    color: #ffffff;
+    border-color: #ec407a;
+    transform: scale(1.12);
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--input-border);
+}
+
+.setting-row:last-child {
+    border-bottom: none;
+}
+
+.setting-row.setting-column {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.setting-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.setting-text strong {
+    font-size: 0.88rem;
+    color: var(--text-dark);
+}
+
+.setting-text span {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+}
+
+/* Tombol pilihan ukuran font */
+.segmented {
+    display: flex;
+    gap: 6px;
+    background: #fff5f7;
+    padding: 4px;
+    border-radius: 14px;
+    border: 1px solid var(--input-border);
+}
+
+.seg-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 6px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.seg-btn.active {
+    background: var(--gradient-btn);
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(236, 64, 122, 0.25);
+}
+
+/* Saklar (switch) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #d9c3cc;
+    border-radius: 26px;
+    cursor: pointer;
+    transition: background 0.25s;
+}
+
+.slider::before {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: transform 0.25s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.switch input:checked + .slider {
+    background: var(--gradient-btn);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(22px);
+}
+
+.switch input:focus-visible + .slider {
+    outline: 3px solid rgba(236, 64, 122, 0.4);
+    outline-offset: 2px;
+}
+
+.app-version {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+/* === 13. POP-UP KONFIRMASI HAPUS === */
+.modal-content.confirm-box {
+    text-align: center;
+    max-width: 340px;
+    margin: 0 auto;
+    padding: 24px 20px 20px !important;
+}
+
+.confirm-icon {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    background: #ffebee;
+    color: #e53935;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.confirm-title {
+    font-size: 1.05rem;
+    color: #d81b60;
+    margin-bottom: 6px;
+}
+
+.confirm-message {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+    word-break: break-word;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-confirm {
+    flex: 1;
+    padding: 11px;
+    border-radius: 16px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+}
+
+.btn-confirm-no {
+    background: #fff5f7;
+    color: #c2185b;
+    border-color: var(--input-border);
+}
+
+.btn-confirm-yes {
+    background: linear-gradient(90deg, #e53935, #ff7043);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
+}
+
+/* === 14. MODE GELAP === */
+html[data-theme="dark"] {
+    --bg-pink: #1b1620;
+    --card-bg: #2a2331;
+    --text-dark: #f1e7f3;
+    --text-muted: #b9a8bd;
+    --input-border: #5a3d57;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="dark"] h1,
+html[data-theme="dark"] .settings-title,
+html[data-theme="dark"] .confirm-title,
+html[data-theme="dark"] .modal-header h3 {
+    color: #f48fb1 !important;
+}
+
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] input[type="time"],
+html[data-theme="dark"] select {
+    background: #352c3d !important;
+    color: var(--text-dark) !important;
+    color-scheme: dark;
+}
+
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] select:focus {
+    background: #3f3449 !important;
+}
+
+html[data-theme="dark"] .input-error {
+    background: #4a2a30 !important;
+    border-color: #ff6b6b !important;
+}
+
+html[data-theme="dark"] .error-message {
+    color: #ff8a80;
+}
+
+html[data-theme="dark"] .stats-box {
+    background: #352a38;
+    border-color: #5a3d57;
+}
+
+html[data-theme="dark"] .stats-header {
+    color: #f48fb1;
+}
+
+html[data-theme="dark"] .progress-track {
+    background: #4a3347;
+}
+
+html[data-theme="dark"] .task-card-item {
+    background: #342b3b;
+}
+
+html[data-theme="dark"] .btn-act {
+    background: #3f3449;
+    color: var(--text-dark);
+}
+
+html[data-theme="dark"] .btn-act.btn-del { background: #4a2a30; color: #ff8a80; }
+html[data-theme="dark"] .btn-act.btn-edit { background: #263a52; color: #90caf9; }
+
+html[data-theme="dark"] .color-picker-wrapper,
+html[data-theme="dark"] .segmented,
+html[data-theme="dark"] .avatar-btn {
+    background: #352c3d;
+}
+
+html[data-theme="dark"] .avatar-btn.active {
+    background: var(--gradient-header);
+}
+
+html[data-theme="dark"] .day-schedule-card {
+    border-color: #5a3d57;
+}
+
+html[data-theme="dark"] .schedule-table {
+    background: #2f2736;
+}
+
+html[data-theme="dark"] .schedule-table th {
+    background: #3a2f40;
+    color: #f48fb1;
+    border-bottom-color: #5a3d57;
+}
+
+html[data-theme="dark"] .schedule-table td {
+    border-bottom-color: #43364a;
+}
+
+html[data-theme="dark"] .room-badge {
+    background: #3a2f40;
+    color: #f48fb1;
+    border-color: #5a3d57;
+}
+
+html[data-theme="dark"] .toast-notification-top {
+    background: #2f2736;
+}
+
+html[data-theme="dark"] .toast-text strong {
+    color: #f1e7f3;
+}
+
+html[data-theme="dark"] .toast-text p {
+    color: #cbbacf;
+}
+
+html[data-theme="dark"] .modal-content {
+    background: #2a2331;
+    color: var(--text-dark);
+}
+
+html[data-theme="dark"] .modal-header {
+    border-bottom-color: #43364a;
+}
+
+html[data-theme="dark"] .confirm-icon {
+    background: #4a2a30;
+    color: #ff8a80;
+}
+
+html[data-theme="dark"] .btn-confirm-no {
+    background: #352c3d;
+    color: #f48fb1;
+}
+
+html[data-theme="dark"] .profile-summary {
+    background: linear-gradient(135deg, rgba(240, 98, 146, 0.18), rgba(255, 138, 101, 0.12));
+}
+
+html[data-theme="dark"] .slider {
+    background: #5b4a60;
 }

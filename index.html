@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
     
     <!-- File CSS Sendiri (Dimuat SESUDAH Pustaka) -->
-    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -36,17 +36,12 @@
         
         <!-- HEADER ATAS (PROFIL & TOMBOL TOGGLE SOUND) -->
         <header class="app-header-profile">
-            <button id="soundToggleBtn" class="sound-toggle-btn" title="Nyalakan/Matikan Suara">
-                <i class="fa-solid fa-volume-high" id="soundIcon"></i>
-                <span id="soundText">Sound On</span>
-            </button>
-
             <div class="user-profile">
                 <div class="avatar">
-                    <i class="fa-solid fa-user"></i>
+                    <i class="fa-solid fa-user" id="headerAvatarIcon"></i>
                 </div>
                 <div class="user-info">
-                    <h2>Hai Debo!</h2>
+                    <h2 id="headerName">Hai Debo!</h2>
                     <p>Kelola tugas, catatan, dan jadwal kuliahmu di sini!</p>
                 </div>
             </div>
@@ -214,6 +209,92 @@
                 </div>
             </section>
 
+            <!-- HALAMAN 4: PROFIL & PENGATURAN -->
+            <section class="page-card hidden" id="pageProfile">
+                <h1>Profil &amp; Pengaturan</h1>
+
+                <div class="profile-summary">
+                    <div class="profile-summary-avatar"><i id="summaryAvatarIcon" class="fa-solid fa-user"></i></div>
+                    <div class="profile-summary-name" id="summaryName">Debo</div>
+                    <div class="profile-summary-campus" id="summaryCampus"></div>
+                </div>
+
+                <!-- EDIT PROFIL -->
+                <div class="settings-section">
+                    <h2 class="settings-title"><i class="fa-solid fa-user-pen"></i> Edit Profil</h2>
+                    <form id="profileForm" novalidate>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="profileName">Nama Panggilan</label>
+                                <input type="text" id="profileName" maxlength="20" placeholder="Nama panggilanmu..." autocomplete="off">
+                                <div class="error-message" id="profileNameError">Nama panggilan wajib diisi!</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileCampus">Kampus / Program Studi (opsional)</label>
+                                <input type="text" id="profileCampus" maxlength="40" placeholder="Contoh: PENS - Teknik Multimedia" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label>Pilih Avatar</label>
+                                <div class="avatar-options" id="avatarOptions">
+                                    <button type="button" class="avatar-btn" data-icon="fa-user" title="Pelajar"><i class="fa-solid fa-user"></i></button>
+                                    <button type="button" class="avatar-btn" data-icon="fa-user-graduate" title="Mahasiswa"><i class="fa-solid fa-user-graduate"></i></button>
+                                    <button type="button" class="avatar-btn" data-icon="fa-cat" title="Kucing"><i class="fa-solid fa-cat"></i></button>
+                                    <button type="button" class="avatar-btn" data-icon="fa-ghost" title="Hantu"><i class="fa-solid fa-ghost"></i></button>
+                                    <button type="button" class="avatar-btn" data-icon="fa-rocket" title="Roket"><i class="fa-solid fa-rocket"></i></button>
+                                    <button type="button" class="avatar-btn" data-icon="fa-heart" title="Hati"><i class="fa-solid fa-heart"></i></button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-submit">Simpan Profil</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- PENGATURAN SUARA -->
+                <div class="settings-section">
+                    <h2 class="settings-title"><i class="fa-solid fa-volume-high"></i> Pengaturan Suara</h2>
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <strong>Efek Suara</strong>
+                            <span>Suara klik dan notifikasi</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="soundSwitch" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- AKSESIBILITAS -->
+                <div class="settings-section">
+                    <h2 class="settings-title"><i class="fa-solid fa-universal-access"></i> Aksesibilitas</h2>
+
+                    <div class="setting-row setting-column">
+                        <div class="setting-text">
+                            <strong>Ukuran Font</strong>
+                            <span>Atur ukuran tulisan di seluruh aplikasi</span>
+                        </div>
+                        <div class="segmented" id="fontSizeGroup">
+                            <button type="button" class="seg-btn" data-font="kecil">Kecil</button>
+                            <button type="button" class="seg-btn active" data-font="sedang">Sedang</button>
+                            <button type="button" class="seg-btn" data-font="besar">Besar</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-text">
+                            <strong>Mode Gelap</strong>
+                            <span>Tampilan lebih nyaman di tempat gelap</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="darkSwitch">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <p class="app-version"><span id="verHtml">HTML v5</span> &middot; <span id="verJs">script belum termuat</span></p>
+            </section>
+
         </main>
     </div>
 
@@ -235,6 +316,10 @@
         <button type="button" class="bottom-nav-item" id="navSchedule">
             <i class="fa-solid fa-calendar-days"></i>
             <span>Jadwal</span>
+        </button>
+        <button type="button" class="bottom-nav-item" id="navProfile">
+            <i class="fa-solid fa-circle-user"></i>
+            <span>Profil</span>
         </button>
     </nav>
 
@@ -348,13 +433,28 @@
         </div>
     </div>
 
+    <!-- POP-UP KONFIRMASI HAPUS (YA / TIDAK) -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content confirm-box">
+                <div class="confirm-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3 id="confirmTitle" class="confirm-title">Konfirmasi</h3>
+                <p id="confirmMessage" class="confirm-message">Yakin?</p>
+                <div class="confirm-actions">
+                    <button type="button" id="confirmNoBtn" class="btn-confirm btn-confirm-no">Tidak</button>
+                    <button type="button" id="confirmYesBtn" class="btn-confirm btn-confirm-yes">Ya, Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Berkas Pembungkus Pustaka UI -->
-    <script src="ui-pustaka.js?v=4"></script>
+    <script src="ui-pustaka.js?v=5"></script>
     
     <!-- File JavaScript Utama -->
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>

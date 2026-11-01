@@ -1,8 +1,50 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const APP_VERSION = 'v5';
+
     let taskListArray = [];
     let notesListArray = [];
     let selectedNoteColor = 'kuning';
-    let isSoundEnabled = true;
+
+    // ==========================================
+    // PENGATURAN (profil, sound, font, dark mode)
+    // Disimpan di localStorage supaya tidak reset saat refresh
+    // ==========================================
+    const STORAGE_KEY = 'smti_pengaturan';
+    const ALLOWED_AVATARS = ['fa-user', 'fa-user-graduate', 'fa-cat', 'fa-ghost', 'fa-rocket', 'fa-heart'];
+    const ALLOWED_FONTS = ['kecil', 'sedang', 'besar'];
+
+    const defaultSettings = {
+        sound: true,
+        font: 'sedang',
+        dark: false,
+        profile: { name: 'Debo', campus: '', avatar: 'fa-user' }
+    };
+
+    function loadSettings() {
+        try {
+            const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (raw && typeof raw === 'object') {
+                const merged = {
+                    ...defaultSettings,
+                    ...raw,
+                    profile: { ...defaultSettings.profile, ...(raw.profile || {}) }
+                };
+                if (!ALLOWED_FONTS.includes(merged.font)) merged.font = 'sedang';
+                if (!ALLOWED_AVATARS.includes(merged.profile.avatar)) merged.profile.avatar = 'fa-user';
+                return merged;
+            }
+        } catch (err) { /* abaikan, pakai bawaan */ }
+        return JSON.parse(JSON.stringify(defaultSettings));
+    }
+
+    function saveSettings() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        } catch (err) { /* penyimpanan tidak tersedia */ }
+    }
+
+    const settings = loadSettings();
+    let isSoundEnabled = !!settings.sound;
 
     // Audio Elements
     const clickSound = document.getElementById('clickSound');
@@ -26,43 +68,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Toggle Sound Button Handler
-    const soundToggleBtn = document.getElementById('soundToggleBtn');
-    const soundIcon = document.getElementById('soundIcon');
-    const soundText = document.getElementById('soundText');
-
-    if (soundToggleBtn) {
-        soundToggleBtn.addEventListener('click', () => {
-            isSoundEnabled = !isSoundEnabled;
-            if (isSoundEnabled) {
-                soundIcon.className = 'fa-solid fa-volume-high';
-                soundText.textContent = 'Sound On';
-                soundToggleBtn.style.background = 'rgba(255, 255, 255, 0.25)';
-                playClickSound();
-            } else {
-                soundIcon.className = 'fa-solid fa-volume-xmark';
-                soundText.textContent = 'Sound Off';
-                soundToggleBtn.style.background = 'rgba(0, 0, 0, 0.2)';
-            }
-        });
-    }
-
-    // Navigasi Halaman (Bottom Navigation)
+    // ==========================================
+    // NAVIGASI HALAMAN (Bottom Navigation)
+    // ==========================================
     const navInputBtn = document.getElementById('navInput');
     const navListBtn = document.getElementById('navList');
     const navNotesBtn = document.getElementById('navNotes');
     const navScheduleBtn = document.getElementById('navSchedule');
+    const navProfileBtn = document.getElementById('navProfile');
 
     const pageInput = document.getElementById('pageInput');
     const pageList = document.getElementById('pageList');
     const pageNotes = document.getElementById('pageNotes');
     const pageSchedule = document.getElementById('pageSchedule');
+    const pageProfile = document.getElementById('pageProfile');
 
     const navItems = [
         { btn: navInputBtn, page: pageInput },
         { btn: navListBtn, page: pageList },
         { btn: navNotesBtn, page: pageNotes },
-        { btn: navScheduleBtn, page: pageSchedule }
+        { btn: navScheduleBtn, page: pageSchedule },
+        { btn: navProfileBtn, page: pageProfile }
     ];
 
     function switchPage(targetBtn, targetPage, playAudio = true) {
@@ -83,7 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Toast Notification Handler (hanya untuk konfirmasi BERHASIL)
+    // ==========================================
+    // TOAST (hanya untuk konfirmasi BERHASIL)
+    // ==========================================
     const toastNotification = document.getElementById('toastNotification');
     const toastMessage = document.getElementById('toastMessage');
     const closeToastBtn = document.getElementById('closeToastBtn');
@@ -106,7 +134,206 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Task Management Logic
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    // ==========================================
+    // POP-UP KONFIRMASI (YA / TIDAK)
+    // ==========================================
+    const MODAL_IDS = ['editModal', 'editScheduleModal', 'addDayModal', 'confirmModal'];
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmYesBtn = document.getElementById('confirmYesBtn');
+    const confirmNoBtn = document.getElementById('confirmNoBtn');
+    let confirmCallback = null;
+
+    function closeAllModals() {
+        confirmCallback = null;
+        MODAL_IDS.forEach(id => UiPustaka.tutupModal(id));
+    }
+
+    // Contoh: confirmDialog({ title: 'Hapus Tugas', message: 'Yakin?' }, () => { ...dijalankan jika klik Ya... })
+    function confirmDialog(options, onYes) {
+        const opts = options || {};
+        if (confirmTitle) confirmTitle.textContent = opts.title || 'Konfirmasi';
+        if (confirmMessage) confirmMessage.textContent = opts.message || 'Yakin ingin melanjutkan?';
+        if (confirmYesBtn) confirmYesBtn.textContent = opts.yesText || 'Ya, Hapus';
+        if (confirmNoBtn) confirmNoBtn.textContent = opts.noText || 'Tidak';
+        confirmCallback = onYes;
+        playClickSound();
+        UiPustaka.bukaModal('confirmModal');
+        if (confirmNoBtn) confirmNoBtn.focus(); // fokus ke "Tidak" supaya aman dari salah tekan
+    }
+
+    if (confirmYesBtn) {
+        confirmYesBtn.addEventListener('click', () => {
+            const callback = confirmCallback;
+            confirmCallback = null;
+            UiPustaka.tutupModal('confirmModal');
+            if (typeof callback === 'function') callback();
+        });
+    }
+
+    if (confirmNoBtn) {
+        confirmNoBtn.addEventListener('click', () => {
+            playClickSound();
+            confirmCallback = null;
+            UiPustaka.tutupModal('confirmModal');
+        });
+    }
+
+    // Tombol Tutup (X) di semua modal
+    document.querySelectorAll('[data-bs-dismiss="modal"], .btn-close').forEach(btn => {
+        btn.addEventListener('click', () => {
+            playClickSound();
+            closeAllModals();
+        });
+    });
+
+    // Klik area gelap di luar kotak modal = tutup
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('mousedown', (e) => {
+            if (e.target === modalEl) closeAllModals();
+        });
+    });
+
+    // Tombol Esc = tutup modal yang sedang terbuka
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.querySelector('.modal.show')) closeAllModals();
+    });
+
+    // ==========================================
+    // PENGATURAN: SOUND, FONT, DARK MODE
+    // ==========================================
+    const rootEl = document.documentElement;
+    const soundSwitch = document.getElementById('soundSwitch');
+    const darkSwitch = document.getElementById('darkSwitch');
+    const fontBtns = document.querySelectorAll('.seg-btn[data-font]');
+
+    function applyFont(size) {
+        rootEl.setAttribute('data-font', size);
+        fontBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-font') === size));
+    }
+
+    function applyTheme(isDark) {
+        rootEl.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        rootEl.setAttribute('data-bs-theme', isDark ? 'dark' : 'light'); // supaya komponen Bootstrap ikut gelap
+    }
+
+    if (soundSwitch) {
+        soundSwitch.checked = isSoundEnabled;
+        soundSwitch.addEventListener('change', () => {
+            isSoundEnabled = soundSwitch.checked;
+            settings.sound = isSoundEnabled;
+            saveSettings();
+            playClickSound(); // hanya bunyi kalau sound baru dinyalakan
+        });
+    }
+
+    if (darkSwitch) {
+        darkSwitch.checked = !!settings.dark;
+        darkSwitch.addEventListener('change', () => {
+            settings.dark = darkSwitch.checked;
+            applyTheme(settings.dark);
+            saveSettings();
+            playClickSound();
+        });
+    }
+
+    fontBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const size = btn.getAttribute('data-font');
+            if (!ALLOWED_FONTS.includes(size)) return;
+            settings.font = size;
+            applyFont(size);
+            saveSettings();
+            playClickSound();
+        });
+    });
+
+    applyFont(settings.font);
+    applyTheme(!!settings.dark);
+
+    // ==========================================
+    // PROFIL
+    // ==========================================
+    const headerName = document.getElementById('headerName');
+    const headerAvatarIcon = document.getElementById('headerAvatarIcon');
+    const summaryAvatarIcon = document.getElementById('summaryAvatarIcon');
+    const summaryName = document.getElementById('summaryName');
+    const summaryCampus = document.getElementById('summaryCampus');
+    const profileForm = document.getElementById('profileForm');
+    const profileNameInput = document.getElementById('profileName');
+    const profileCampusInput = document.getElementById('profileCampus');
+    const profileNameError = document.getElementById('profileNameError');
+    const avatarBtns = document.querySelectorAll('.avatar-btn');
+    let pendingAvatar = settings.profile.avatar;
+
+    function highlightAvatar(icon) {
+        avatarBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-icon') === icon));
+    }
+
+    function renderProfile() {
+        const p = settings.profile;
+        if (headerName) headerName.textContent = `Hai ${p.name}!`;
+        if (headerAvatarIcon) headerAvatarIcon.className = `fa-solid ${p.avatar}`;
+        if (summaryAvatarIcon) summaryAvatarIcon.className = `fa-solid ${p.avatar}`;
+        if (summaryName) summaryName.textContent = p.name;
+        if (summaryCampus) summaryCampus.textContent = p.campus || 'Kampus / program studi belum diisi';
+        if (profileNameInput) profileNameInput.value = p.name;
+        if (profileCampusInput) profileCampusInput.value = p.campus;
+        pendingAvatar = p.avatar;
+        highlightAvatar(pendingAvatar);
+    }
+
+    function setProfileNameError(isError) {
+        if (profileNameError) profileNameError.classList.toggle('show', isError);
+        if (profileNameInput) profileNameInput.classList.toggle('input-error', isError);
+    }
+
+    avatarBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const icon = btn.getAttribute('data-icon');
+            if (!ALLOWED_AVATARS.includes(icon)) return;
+            playClickSound();
+            pendingAvatar = icon;
+            highlightAvatar(icon);
+        });
+    });
+
+    if (profileNameInput) {
+        profileNameInput.addEventListener('input', () => setProfileNameError(false));
+    }
+
+    if (profileForm) {
+        profileForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = profileNameInput.value.trim();
+            const campus = profileCampusInput.value.trim();
+
+            // Jika nama kosong: error merah, TANPA toast sukses
+            if (!name) {
+                setProfileNameError(true);
+                profileNameInput.focus();
+                return;
+            }
+
+            setProfileNameError(false);
+            settings.profile = { name, campus, avatar: pendingAvatar };
+            saveSettings();
+            renderProfile();
+            showToast("Profil berhasil diperbarui!");
+        });
+    }
+
+    renderProfile();
+
+    // ==========================================
+    // TUGAS (Task Management)
+    // ==========================================
     const taskForm = document.getElementById('taskForm');
     const taskTitleInput = document.getElementById('taskTitle');
     const taskCategoryInput = document.getElementById('taskCategory');
@@ -191,15 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProgress();
     }
 
-    function escapeHtml(str) {
-        return String(str).replace(/[&<>'"]/g, 
-            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-        );
-    }
-
-    // ==========================================
-    // VALIDASI FORM TUGAS (PESAN ERROR MERAH)
-    // ==========================================
+    // ----- Validasi form tugas (pesan error merah) -----
     function setError(inputEl, errorId, isError) {
         const errEl = document.getElementById(errorId);
         if (errEl) errEl.classList.toggle('show', isError);
@@ -257,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
         switchPage(navListBtn, pageList, false);
     }
 
-    // Submit lewat tombol "Simpan Tugas" ATAU tekan Enter di kolom input
     if (taskForm) {
         taskForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -265,21 +483,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Enter di kolom mana pun (teks, tanggal, dropdown) langsung memicu simpan
-    console.log("script.js v4 dimuat: handler Enter aktif");
-
+    // ==========================================
+    // TOMBOL ENTER UNTUK SEMUA FORM
+    // Satu pendengar di level dokumen (fase capture), jadi tidak bergantung
+    // pada kolom mana yang sedang fokus atau pada perilaku bawaan browser.
+    // ==========================================
     document.addEventListener('keydown', (e) => {
         const isEnter = e.key === 'Enter' || e.keyCode === 13 || e.which === 13;
-        if (!isEnter) return;
+        if (!isEnter || e.isComposing) return;
 
-        // Hanya berlaku kalau fokus ada di dalam form tambah tugas
-        if (!taskForm || !taskForm.contains(e.target)) return;
-        if (e.target.tagName === 'BUTTON') return; // biarkan tombol bekerja normal
+        const target = e.target;
+        if (!target || !target.tagName || typeof target.closest !== 'function') return;
 
-        console.log("Enter terdeteksi di:", e.target.id);
+        const tag = target.tagName;
+        if (tag === 'BUTTON' || tag === 'TEXTAREA' || tag === 'A') return; // biarkan normal
+
+        const form = target.closest('form');
+        if (!form) return; // contoh: kolom catatan cepat punya pendengar Enter sendiri
+
         e.preventDefault();
         e.stopPropagation();
-        processTaskSubmission();
+
+        if (form === taskForm) {
+            processTaskSubmission();
+        } else if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
     }, true);
 
     if (filterCategory) filterCategory.addEventListener('change', renderTasks);
@@ -293,9 +524,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteTask = function(id) {
-        taskListArray = taskListArray.filter(t => t.id !== id);
-        renderTasks();
-        showToast("Tugas berhasil dihapus.");
+        const task = taskListArray.find(t => t.id === id);
+        if (!task) return;
+        confirmDialog({
+            title: 'Hapus Tugas?',
+            message: `Yakin mau menghapus tugas "${task.title}"?`
+        }, () => {
+            taskListArray = taskListArray.filter(t => t.id !== id);
+            renderTasks();
+            showToast("Tugas berhasil dihapus.");
+        });
     };
 
     // Modal Edit Tugas Handlers
@@ -340,16 +578,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Tugas berhasil diperbarui!");
         });
     }
-
-    // Tombol Tutup / Close Modal
-    document.querySelectorAll('[data-bs-dismiss="modal"], .btn-close').forEach(btn => {
-        btn.addEventListener('click', () => {
-            playClickSound();
-            UiPustaka.tutupModal('editModal');
-            UiPustaka.tutupModal('editScheduleModal');
-            UiPustaka.tutupModal('addDayModal');
-        });
-    });
 
     // ==========================================
     // STICKY NOTES LOGIC
@@ -442,9 +670,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.deleteNote = function(id) {
-        notesListArray = notesListArray.filter(n => n.id !== id);
-        renderNotes();
-        showToast("Catatan berhasil dihapus.");
+        const note = notesListArray.find(n => n.id === id);
+        if (!note) return;
+        const preview = note.text.length > 40 ? note.text.slice(0, 40) + '...' : note.text;
+        confirmDialog({
+            title: 'Hapus Catatan?',
+            message: `Yakin mau menghapus catatan "${preview}"?`
+        }, () => {
+            notesListArray = notesListArray.filter(n => n.id !== id);
+            renderNotes();
+            showToast("Catatan berhasil dihapus.");
+        });
     };
 
     window.togglePinNote = function(id) {
@@ -661,23 +897,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ---------- Hapus jadwal / hapus hari ----------
+    // ---------- Hapus jadwal / hapus hari (dengan konfirmasi Ya/Tidak) ----------
     window.deleteScheduleItem = function(day, index) {
-        if (!scheduleData[day]) return;
-        scheduleData[day].splice(index, 1);
-        renderSchedule();
-        showToast("Jadwal kuliah berhasil dihapus.");
+        const item = scheduleData[day] && scheduleData[day][index];
+        if (!item) return;
+        confirmDialog({
+            title: 'Hapus Jadwal?',
+            message: `Yakin mau menghapus jadwal "${item.subject}" di hari ${day}?`
+        }, () => {
+            scheduleData[day].splice(index, 1);
+            renderSchedule();
+            showToast("Jadwal kuliah berhasil dihapus.");
+        });
     };
 
     window.deleteScheduleDay = function(day) {
-        const count = scheduleData[day] ? scheduleData[day].length : 0;
-        const msg = count > 0
-            ? `Hapus hari ${day} beserta ${count} jadwal di dalamnya?`
-            : `Hapus hari ${day}?`;
-        if (!confirm(msg)) return;
-        delete scheduleData[day];
-        renderSchedule();
-        showToast(`Hari ${day} berhasil dihapus.`);
+        if (!scheduleData[day]) return;
+        const count = scheduleData[day].length;
+        const message = count > 0
+            ? `Yakin mau menghapus hari ${day} beserta ${count} jadwal di dalamnya?`
+            : `Yakin mau menghapus hari ${day}?`;
+        confirmDialog({
+            title: 'Hapus Hari?',
+            message
+        }, () => {
+            delete scheduleData[day];
+            renderSchedule();
+            showToast(`Hari ${day} berhasil dihapus.`);
+        });
     };
 
     // ---------- Tambah hari (Sabtu, Minggu, dll.) ----------
@@ -708,9 +955,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ==========================================
+    // INISIALISASI
+    // ==========================================
     renderTasks();
     renderNotes();
     renderSchedule();
 
-    console.log("Sistem Manajemen Tugas Interaktif berhasil dimuat!");
+    const verJs = document.getElementById('verJs');
+    if (verJs) verJs.textContent = 'script ' + APP_VERSION;
+
+    console.log("Sistem Manajemen Tugas Interaktif " + APP_VERSION + " berhasil dimuat!");
 });
