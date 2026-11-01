@@ -197,11 +197,13 @@ input:focus, select:focus {
 
 .filter-section {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 16px;
 }
 
 .filter-section select {
+    flex: 1 1 140px;
     font-size: 0.78rem;
     padding: 8px 10px;
     border-radius: 12px;
@@ -675,4 +677,50 @@ input:focus, select:focus {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-4px); }
     75% { transform: translateX(4px); }
+}
+
+/* === 10. JADWAL: TAMBAH / HAPUS === */
+.btn-add-day {
+    margin-top: 0;
+    margin-bottom: 14px;
+}
+
+.btn-add-day:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.day-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.btn-day-action {
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    color: #ffffff;
+    padding: 3px 9px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-day-action:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.schedule-actions-cell {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+.schedule-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 14px 10px !important;
 }

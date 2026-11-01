@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressText = document.getElementById('progressText');
     const filterCategory = document.getElementById('filterCategory');
     const filterStatus = document.getElementById('filterStatus');
+    const filterPriority = document.getElementById('filterPriority');
 
     function updateProgress() {
         if (taskListArray.length === 0) {
@@ -140,11 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const catFilter = filterCategory ? filterCategory.value : 'Semua';
         const statFilter = filterStatus ? filterStatus.value : 'Semua';
+        const prioFilter = filterPriority ? filterPriority.value : 'Semua';
 
         const filtered = taskListArray.filter(t => {
             const matchCat = (catFilter === 'Semua' || t.category === catFilter);
             const matchStat = (statFilter === 'Semua' || t.status === statFilter);
-            return matchCat && matchStat;
+            const matchPrio = (prioFilter === 'Semua' || t.priority === prioFilter);
+            return matchCat && matchStat && matchPrio;
         });
 
         if (filtered.length === 0) {
@@ -263,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Enter di kolom mana pun (teks, tanggal, dropdown) langsung memicu simpan
-    console.log("script.js v3 dimuat: handler Enter aktif");
+    console.log("script.js v4 dimuat: handler Enter aktif");
 
     document.addEventListener('keydown', (e) => {
         const isEnter = e.key === 'Enter' || e.keyCode === 13 || e.which === 13;
@@ -281,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (filterCategory) filterCategory.addEventListener('change', renderTasks);
     if (filterStatus) filterStatus.addEventListener('change', renderTasks);
+    if (filterPriority) filterPriority.addEventListener('change', renderTasks);
 
     window.changeTaskStatus = function(id, newStatus) {
         taskListArray = taskListArray.map(t => t.id === id ? { ...t, status: newStatus } : t);
@@ -343,6 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playClickSound();
             UiPustaka.tutupModal('editModal');
             UiPustaka.tutupModal('editScheduleModal');
+            UiPustaka.tutupModal('addDayModal');
         });
     });
 
@@ -449,8 +454,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // JADWAL KULIAH RENDER & EDIT LOGIC
+    // JADWAL KULIAH: RENDER, TAMBAH, EDIT, HAPUS
     // ==========================================
+    const DAY_ORDER = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+
     const scheduleData = {
         "Senin": [
             { time: "07:30 - 10:00", subject: "Jaringan Komputer", room: "JJ 3.11" },
@@ -474,29 +481,59 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const scheduleContainer = document.getElementById('scheduleContainer');
+    const addDayBtn = document.getElementById('addDayBtn');
+
+    function sortDayItems(day) {
+        // Urutkan berdasarkan jam mulai (format HH:MM sudah rata, jadi aman dibandingkan sebagai teks)
+        scheduleData[day].sort((a, b) => a.time.localeCompare(b.time));
+    }
 
     function renderSchedule() {
         if (!scheduleContainer) return;
         scheduleContainer.innerHTML = '';
 
-        for (const [day, items] of Object.entries(scheduleData)) {
+        const activeDays = DAY_ORDER.filter(d => scheduleData[d]);
+
+        // Tombol "Tambah Hari" nonaktif kalau ke-7 hari sudah ada
+        if (addDayBtn) addDayBtn.disabled = activeDays.length === DAY_ORDER.length;
+
+        if (activeDays.length === 0) {
+            scheduleContainer.innerHTML = `
+                <div class="empty-state">
+                    <p>Belum ada hari di jadwal. Klik "Tambah Hari" untuk mulai!</p>
+                </div>
+            `;
+            return;
+        }
+
+        activeDays.forEach(day => {
+            const items = scheduleData[day];
             const dayCard = document.createElement('div');
             dayCard.className = 'day-schedule-card';
 
-            let rows = items.map((item, idx) => `
-                <tr>
-                    <td><strong>${escapeHtml(item.time)}</strong></td>
-                    <td>${escapeHtml(item.subject)}</td>
-                    <td><span class="room-badge">${escapeHtml(item.room)}</span></td>
-                    <td style="text-align: right;">
-                        <button type="button" class="btn-act btn-edit" onclick="openEditSchedule('${day}', ${idx})"><i class="fa-solid fa-pen"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            const rows = items.length === 0
+                ? `<tr><td colspan="4" class="schedule-empty">Belum ada jadwal di hari ini.</td></tr>`
+                : items.map((item, idx) => `
+                    <tr>
+                        <td><strong>${escapeHtml(item.time)}</strong></td>
+                        <td>${escapeHtml(item.subject)}</td>
+                        <td><span class="room-badge">${escapeHtml(item.room)}</span></td>
+                        <td>
+                            <div class="schedule-actions-cell">
+                                <button type="button" class="btn-act btn-edit" onclick="openEditSchedule('${day}', ${idx})" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                <button type="button" class="btn-act btn-del" onclick="deleteScheduleItem('${day}', ${idx})" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
 
             dayCard.innerHTML = `
                 <div class="day-header">
                     <span><i class="fa-solid fa-calendar-day"></i> ${day}</span>
+                    <div class="day-actions">
+                        <button type="button" class="btn-day-action" onclick="openAddSchedule('${day}')"><i class="fa-solid fa-plus"></i> Jadwal</button>
+                        <button type="button" class="btn-day-action" onclick="deleteScheduleDay('${day}')" title="Hapus hari ini"><i class="fa-solid fa-trash"></i></button>
+                    </div>
                 </div>
                 <table class="schedule-table">
                     <thead>
@@ -513,9 +550,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </table>
             `;
             scheduleContainer.appendChild(dayCard);
-        }
+        });
     }
 
+    // ---------- Form tambah / edit jadwal ----------
     const editScheduleForm = document.getElementById('editScheduleForm');
     const editSchedDay = document.getElementById('editSchedDay');
     const editSchedIndex = document.getElementById('editSchedIndex');
@@ -523,9 +561,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const editSchedEndTime = document.getElementById('editSchedEndTime');
     const editSchedSubject = document.getElementById('editSchedSubject');
     const editSchedRoom = document.getElementById('editSchedRoom');
+    const scheduleModalTitle = document.getElementById('scheduleModalTitle');
+    const schedSubmitBtn = document.getElementById('schedSubmitBtn');
+    const schedError = document.getElementById('schedError');
 
+    function showSchedError(msg) {
+        if (!schedError) return;
+        schedError.textContent = msg;
+        schedError.classList.add('show');
+    }
+
+    function hideSchedError() {
+        if (schedError) schedError.classList.remove('show');
+        [editSchedStartTime, editSchedEndTime, editSchedSubject, editSchedRoom].forEach(el => {
+            if (el) el.classList.remove('input-error');
+        });
+    }
+
+    [editSchedStartTime, editSchedEndTime, editSchedSubject, editSchedRoom].forEach(el => {
+        if (el) el.addEventListener('input', hideSchedError);
+    });
+
+    // Tambah jadwal baru di hari tertentu
+    window.openAddSchedule = function(day) {
+        playClickSound();
+        hideSchedError();
+        editSchedDay.value = day;
+        editSchedIndex.value = ''; // kosong = mode tambah
+        editSchedStartTime.value = '';
+        editSchedEndTime.value = '';
+        editSchedSubject.value = '';
+        editSchedRoom.value = '';
+        scheduleModalTitle.textContent = 'Tambah Jadwal - ' + day;
+        schedSubmitBtn.textContent = 'Tambah Jadwal';
+
+        UiPustaka.bukaModal('editScheduleModal');
+    };
+
+    // Edit jadwal yang sudah ada
     window.openEditSchedule = function(day, index) {
         playClickSound();
+        hideSchedError();
         const item = scheduleData[day][index];
         const times = item.time.split(' - ');
         editSchedDay.value = day;
@@ -534,6 +610,8 @@ document.addEventListener('DOMContentLoaded', () => {
         editSchedEndTime.value = times[1] ? times[1].trim() : '';
         editSchedSubject.value = item.subject;
         editSchedRoom.value = item.room;
+        scheduleModalTitle.textContent = 'Edit Jadwal Kuliah - ' + day;
+        schedSubmitBtn.textContent = 'Simpan Jadwal';
 
         UiPustaka.bukaModal('editScheduleModal');
     };
@@ -542,21 +620,91 @@ document.addEventListener('DOMContentLoaded', () => {
         editScheduleForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const day = editSchedDay.value;
-            const index = parseInt(editSchedIndex.value);
-            const newTime = `${editSchedStartTime.value} - ${editSchedEndTime.value}`;
-            const newSubject = editSchedSubject.value.trim();
-            const newRoom = editSchedRoom.value.trim();
+            const isAddMode = editSchedIndex.value === '';
+            const start = editSchedStartTime.value;
+            const end = editSchedEndTime.value;
+            const subject = editSchedSubject.value.trim();
+            const room = editSchedRoom.value.trim();
 
-            if (scheduleData[day] && scheduleData[day][index]) {
-                scheduleData[day][index] = {
-                    time: newTime,
-                    subject: newSubject,
-                    room: newRoom
-                };
-                renderSchedule();
-                UiPustaka.tutupModal('editScheduleModal');
-                showToast("Jadwal kuliah berhasil diperbarui!");
+            // Validasi: pesan error merah di dalam modal (bukan toast)
+            hideSchedError();
+            if (!start || !end || !subject || !room) {
+                if (!start) editSchedStartTime.classList.add('input-error');
+                if (!end) editSchedEndTime.classList.add('input-error');
+                if (!subject) editSchedSubject.classList.add('input-error');
+                if (!room) editSchedRoom.classList.add('input-error');
+                showSchedError('Semua kolom jadwal wajib diisi!');
+                return;
             }
+            if (end <= start) {
+                editSchedStartTime.classList.add('input-error');
+                editSchedEndTime.classList.add('input-error');
+                showSchedError('Jam selesai harus lebih besar dari jam mulai!');
+                return;
+            }
+
+            if (!scheduleData[day]) return;
+            const entry = { time: `${start} - ${end}`, subject, room };
+
+            if (isAddMode) {
+                scheduleData[day].push(entry);
+            } else {
+                const index = parseInt(editSchedIndex.value);
+                if (!scheduleData[day][index]) return;
+                scheduleData[day][index] = entry;
+            }
+
+            sortDayItems(day);
+            renderSchedule();
+            UiPustaka.tutupModal('editScheduleModal');
+            showToast(isAddMode ? "Jadwal kuliah berhasil ditambahkan!" : "Jadwal kuliah berhasil diperbarui!");
+        });
+    }
+
+    // ---------- Hapus jadwal / hapus hari ----------
+    window.deleteScheduleItem = function(day, index) {
+        if (!scheduleData[day]) return;
+        scheduleData[day].splice(index, 1);
+        renderSchedule();
+        showToast("Jadwal kuliah berhasil dihapus.");
+    };
+
+    window.deleteScheduleDay = function(day) {
+        const count = scheduleData[day] ? scheduleData[day].length : 0;
+        const msg = count > 0
+            ? `Hapus hari ${day} beserta ${count} jadwal di dalamnya?`
+            : `Hapus hari ${day}?`;
+        if (!confirm(msg)) return;
+        delete scheduleData[day];
+        renderSchedule();
+        showToast(`Hari ${day} berhasil dihapus.`);
+    };
+
+    // ---------- Tambah hari (Sabtu, Minggu, dll.) ----------
+    const addDayForm = document.getElementById('addDayForm');
+    const newDaySelect = document.getElementById('newDaySelect');
+
+    if (addDayBtn) {
+        addDayBtn.addEventListener('click', () => {
+            const missingDays = DAY_ORDER.filter(d => !scheduleData[d]);
+            if (missingDays.length === 0) return;
+            playClickSound();
+            newDaySelect.innerHTML = missingDays
+                .map(d => `<option value="${d}">${d}</option>`)
+                .join('');
+            UiPustaka.bukaModal('addDayModal');
+        });
+    }
+
+    if (addDayForm) {
+        addDayForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const day = newDaySelect.value;
+            if (!day || scheduleData[day]) return;
+            scheduleData[day] = [];
+            renderSchedule();
+            UiPustaka.tutupModal('addDayModal');
+            showToast(`Hari ${day} berhasil ditambahkan!`);
         });
     }
 
