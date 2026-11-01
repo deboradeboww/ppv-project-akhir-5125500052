@@ -60,7 +60,8 @@
                 <h1>Formulir Tambah Tugas</h1>
                 <p class="subtitle-hint">Isi data tugas di bawah ini</p>
                 
-                <form id="taskForm">
+                <!-- novalidate: supaya popup bawaan browser tidak muncul, diganti pesan error merah buatan sendiri -->
+                <form id="taskForm" novalidate>
                     <div class="form-grid">
                         <div class="form-group full-width">
                             <label for="taskTitle">Nama Tugas</label>
@@ -172,6 +173,7 @@
                 
                 <div class="note-input-box">
                     <input type="text" id="noteInputText" placeholder="Tulis ide atau catatan cepat..." autocomplete="off">
+                    <div class="error-message" id="noteError">Catatan tidak boleh kosong!</div>
                     
                     <div class="color-picker-wrapper">
                         <span class="color-picker-label">Pilih Warna:</span>

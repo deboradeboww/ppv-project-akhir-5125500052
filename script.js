@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Toast Notification Handler
+    // Toast Notification Handler (hanya untuk konfirmasi BERHASIL)
     const toastNotification = document.getElementById('toastNotification');
     const toastMessage = document.getElementById('toastMessage');
     const closeToastBtn = document.getElementById('closeToastBtn');
@@ -148,10 +148,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (filtered.length === 0) {
+            const emptyText = taskListArray.length === 0
+                ? 'Belum ada tugas tersimpan. Silakan isi lewat menu "Input"!'
+                : 'Tidak ada tugas yang sesuai dengan filter.';
             taskListContainer.innerHTML = `
                 <div class="empty-state">
                     <img src="assets/empty-task.png" alt="Ilustrasi Tugas Kosong" class="empty-img" width="70">
-                    <p>Tidak ada tugas yang sesuai dengan filter.</p>
+                    <p>${emptyText}</p>
                 </div>
             `;
             updateProgress();
@@ -186,41 +189,72 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function escapeHtml(str) {
-        return str.replace(/[&<>'"]/g, 
+        return String(str).replace(/[&<>'"]/g, 
             tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
         );
     }
 
-    function processTaskSubmission() {
-        const title = taskTitleInput.value.trim();
-        const category = taskCategoryInput.value;
-        const deadline = taskDeadlineInput.value;
-        const priority = taskPriorityInput.value;
-        const status = taskStatusInput.value;
+    // ==========================================
+    // VALIDASI FORM TUGAS (PESAN ERROR MERAH)
+    // ==========================================
+    function setError(inputEl, errorId, isError) {
+        const errEl = document.getElementById(errorId);
+        if (errEl) errEl.classList.toggle('show', isError);
+        if (inputEl) inputEl.classList.toggle('input-error', isError);
+    }
 
-        if (!title || !category || !deadline) {
-            showToast("Harap isi semua data tugas dengan lengkap!");
-            return;
-        }
+    function validateTaskForm() {
+        const titleEmpty = !taskTitleInput.value.trim();
+        const categoryEmpty = !taskCategoryInput.value;
+        const deadlineEmpty = !taskDeadlineInput.value;
+
+        setError(taskTitleInput, 'titleError', titleEmpty);
+        setError(taskCategoryInput, 'categoryError', categoryEmpty);
+        setError(taskDeadlineInput, 'deadlineError', deadlineEmpty);
+
+        // Fokus ke kolom pertama yang masih kosong
+        if (titleEmpty) taskTitleInput.focus();
+        else if (categoryEmpty) taskCategoryInput.focus();
+        else if (deadlineEmpty) taskDeadlineInput.focus();
+
+        return !(titleEmpty || categoryEmpty || deadlineEmpty);
+    }
+
+    function clearTaskErrors() {
+        setError(taskTitleInput, 'titleError', false);
+        setError(taskCategoryInput, 'categoryError', false);
+        setError(taskDeadlineInput, 'deadlineError', false);
+    }
+
+    // Error hilang otomatis saat user mulai mengisi
+    if (taskTitleInput) taskTitleInput.addEventListener('input', () => setError(taskTitleInput, 'titleError', false));
+    if (taskCategoryInput) taskCategoryInput.addEventListener('change', () => setError(taskCategoryInput, 'categoryError', false));
+    if (taskDeadlineInput) taskDeadlineInput.addEventListener('change', () => setError(taskDeadlineInput, 'deadlineError', false));
+
+    function processTaskSubmission() {
+        // Jika belum lengkap: tampilkan error merah, TANPA toast sukses
+        if (!validateTaskForm()) return;
 
         const newTask = {
             id: 't_' + Date.now(),
-            title,
-            category,
-            deadline,
-            priority,
-            status
+            title: taskTitleInput.value.trim(),
+            category: taskCategoryInput.value,
+            deadline: taskDeadlineInput.value,
+            priority: taskPriorityInput.value,
+            status: taskStatusInput.value
         };
 
         taskListArray.push(newTask);
         taskForm.reset();
+        clearTaskErrors();
         renderTasks();
         showToast("Yey! Tugas barumu berhasil ditambahkan!");
-        
+
         // Pindah halaman otomatis tanpa memicu suara klik dobel (cukup suara toast)
         switchPage(navListBtn, pageList, false);
     }
 
+    // Submit lewat tombol "Simpan Tugas" ATAU tekan Enter di kolom input
     if (taskForm) {
         taskForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -232,14 +266,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterStatus) filterStatus.addEventListener('change', renderTasks);
 
     window.changeTaskStatus = function(id, newStatus) {
-        // playClickSound dihapus agar tidak dobel dengan suara toast
         taskListArray = taskListArray.map(t => t.id === id ? { ...t, status: newStatus } : t);
         renderTasks();
         showToast("Status tugas berhasil diperbarui!");
     };
 
     window.deleteTask = function(id) {
-        // playClickSound dihapus agar tidak dobel dengan suara toast
         taskListArray = taskListArray.filter(t => t.id !== id);
         renderTasks();
         showToast("Tugas berhasil dihapus.");
@@ -297,8 +329,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Sticky Notes Logic
+    // ==========================================
+    // STICKY NOTES LOGIC
+    // ==========================================
     const noteInputText = document.getElementById('noteInputText');
+    const noteError = document.getElementById('noteError');
     const addNoteBtn = document.getElementById('addNoteBtn');
     const notesContainer = document.getElementById('notesContainer');
     const colorBtns = document.querySelectorAll('.color-btn');
@@ -342,25 +377,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function setNoteError(isError) {
+        if (noteError) noteError.classList.toggle('show', isError);
+        if (noteInputText) noteInputText.classList.toggle('input-error', isError);
+    }
+
     function addNoteAction() {
         const text = noteInputText.value.trim();
+
+        // Jika kosong: tampilkan error merah, TANPA toast sukses
         if (!text) {
-            showToast("Tulis catatan terlebih dahulu!");
+            setNoteError(true);
+            noteInputText.focus();
             return;
         }
-        const newNote = {
+
+        setNoteError(false);
+        notesListArray.push({
             id: 'n_' + Date.now(),
             text,
             color: selectedNoteColor,
             isPinned: false
-        };
-        notesListArray.push(newNote);
+        });
         noteInputText.value = '';
         renderNotes();
         showToast("Catatan cepat berhasil ditambahkan!");
     }
 
     if (addNoteBtn) addNoteBtn.addEventListener('click', addNoteAction);
+
+    if (noteInputText) {
+        // Error hilang otomatis saat user mulai mengetik
+        noteInputText.addEventListener('input', () => setNoteError(false));
+
+        // Tekan Enter untuk menambah catatan
+        noteInputText.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addNoteAction();
+            }
+        });
+    }
 
     window.deleteNote = function(id) {
         notesListArray = notesListArray.filter(n => n.id !== id);
