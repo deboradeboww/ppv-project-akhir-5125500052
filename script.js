@@ -262,6 +262,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Enter di kolom mana pun (teks, tanggal, dropdown) langsung memicu simpan
+    console.log("script.js v3 dimuat: handler Enter aktif");
+
+    document.addEventListener('keydown', (e) => {
+        const isEnter = e.key === 'Enter' || e.keyCode === 13 || e.which === 13;
+        if (!isEnter) return;
+
+        // Hanya berlaku kalau fokus ada di dalam form tambah tugas
+        if (!taskForm || !taskForm.contains(e.target)) return;
+        if (e.target.tagName === 'BUTTON') return; // biarkan tombol bekerja normal
+
+        console.log("Enter terdeteksi di:", e.target.id);
+        e.preventDefault();
+        e.stopPropagation();
+        processTaskSubmission();
+    }, true);
+
     if (filterCategory) filterCategory.addEventListener('change', renderTasks);
     if (filterStatus) filterStatus.addEventListener('change', renderTasks);
 
