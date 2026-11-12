@@ -41,10 +41,10 @@ Dokumen ini memetakan rencana pengembangan mingguan aplikasi manajemen tugas dar
   * Komponen UI modular (*reusable components*).
   * Manajemen *Local Storage* yang tervalidasi.
   * Pembaharuan `README.md` dan pembuatan `CHANGELOG.md`.
-  * Pembuatan Tag Rilis versi `v0.x` di GitHub.
+  * Pembuatan Tag Rilis versi `v0.4.0` di GitHub.
 - **Bukti**:
   * Berkas `CHANGELOG.md` tercantum di repositori.
-  * Tag rilis `v0.x` terpublikasi di tab *Releases* GitHub.
+  * Tag rilis `v0.4.0` terpublikasi di tab *Releases* GitHub.
 
 ---
 
