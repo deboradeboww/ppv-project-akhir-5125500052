@@ -35,7 +35,7 @@ Dokumen ini memetakan rencana pengembangan mingguan aplikasi manajemen tugas dar
 
 ---
 
-### **P12: Komponen Reusable, Penyimpanan Aman, & Rilis Versioning [BERIKUTNYA]**
+### **P12: Komponen Reusable, Penyimpanan Aman, & Rilis Versioning [SELESAI]**
 - **Fitur MVP yang Dikerjakan**: Komponen antarmuka yang dapat digunakan kembali dan penyimpanan data lokal yang aman/tervalidasi.
 - **Deliverable**:
   * Komponen UI modular (*reusable components*).
