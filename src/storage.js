@@ -19,3 +19,13 @@ export function muatTugasLokal() {
     return [];
   }
 }
+
+// Fungsi tambahan untuk menangani pemanggilan dari state.js
+export function bacaPengaturanMentah() {
+  try {
+    return localStorage.getItem(KUNCI_TUGAS);
+  } catch (err) {
+    console.warn('Gagal membaca data mentah dari localStorage:', err);
+    return null;
+  }
+}
