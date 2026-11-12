@@ -13,4 +13,15 @@ dan proyek ini berpedoman pada [Semantic Versioning](https://semver.org/spec/v2.
 
 ### Diubah
 - Memperbarui modul `src/storage.js` dengan penggunaan kunci berversi (`proyek-tugas:v1`) dan proteksi blok `try/catch` untuk ketahanan data lokal dari kerusakan (*corrupted data*).
-```[cite: 1]
+
+## [v0.3.0]
+### Diperbarui
+- Implementasi modul ES pada struktur proyek `src/`.
+
+## [v0.2.0]
+### Ditambahkan
+- Integrasi pustaka UI dan perbaikan bug tampilan antarmuka.
+
+## [v0.1.0]
+### Ditambahkan
+- Basis pengerjaan Tugas 4 dan penyusunan dokumen charter.
