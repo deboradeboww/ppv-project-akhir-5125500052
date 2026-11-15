@@ -92,8 +92,8 @@ Penyimpanan diuji dengan merusak isi `localStorage` lewat DevTools (Application 
 
 | No | Skenario | Isi yang dimasukkan | Hasil |
 |---|---|---|---|
-| P-01 | S2: JSON rusak | `{rusak` | [isi hasil uji] |
-| P-02 | S5: item rusak | `[null, 5, {"title":7}, <satu tugas sah>]` | [isi hasil uji] |
+| P-01 | S2: JSON rusak | `{rusak` | Aplikasi tetap terbuka dengan daftar kosong; tugas baru bisa ditambah dan isi kunci pulih. Lolos |
+| P-02 | S5: item rusak | `[null, 5, {"title":7}]` | Aplikasi tetap terbuka, semua item rusak tersaring, badge List 0. Lolos |
 
 ## 📚 Kredit Aset dan Pustaka
 
