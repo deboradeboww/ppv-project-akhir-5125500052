@@ -35,16 +35,27 @@ Dokumen ini memetakan rencana pengembangan mingguan aplikasi manajemen tugas dar
 
 ---
 
-### **P12: Komponen Reusable, Penyimpanan Aman, & Rilis Versioning [SELESAI]**
-- **Fitur MVP yang Dikerjakan**: Komponen antarmuka yang dapat digunakan kembali dan penyimpanan data lokal yang aman/tervalidasi.
-- **Deliverable**:
-  * Komponen UI modular (*reusable components*).
-  * Manajemen *Local Storage* yang tervalidasi.
-  * Pembaharuan `README.md` dan pembuatan `CHANGELOG.md`.
-  * Pembuatan Tag Rilis versi `v0.4.0` di GitHub.
-- **Bukti**:
-  * Berkas `CHANGELOG.md` tercantum di repositori.
-  * Tag rilis `v0.4.0` terpublikasi di tab *Releases* GitHub.
+## [v0.4.0] - 2026-11-15
+
+P12: Komponen Reusable, Penyimpanan Aman, dan Rilis Versioning
+
+### Ditambahkan
+- Modul komponen reusable `src/komponen.js` berisi `KartuTugas(task)` dan `PesanKosong(pesan, { gambar, alt })`. `KartuTugas` dipakai untuk setiap item daftar tugas, `PesanKosong` dipakai di daftar tugas, catatan cepat, dan jadwal kuliah.
+- Penyimpanan data tugas ke `localStorage` dengan kunci berversi `proyek-tugas:v1`; sebelumnya hanya pengaturan yang tersimpan.
+- Cadangan di memori di `src/storage.js` dan fungsi `penyimpananTersedia()`, sehingga aplikasi tetap berjalan saat `localStorage` diblokir atau penuh.
+- Toast peringatan bila penyimpanan peramban tidak tersedia (data tidak tersimpan setelah halaman ditutup).
+- Ekspor `bacaPengaturanMentah` dan `simpanPengaturanMentah` di `src/storage.js` untuk dipakai `state.js`.
+- `README.md` lengkap dan penandaan Sprint 4 di `ROADMAP.md`.
+
+### Diubah
+- `KartuTugas` dibangun dengan `createElement` dan `textContent` tanpa `innerHTML`, sehingga teks pengguna dan `id` tidak diperlakukan sebagai kode HTML.
+- `src/state.js` merapikan data saat dimuat: tipe tiap field dipastikan benar, `id` dipastikan unik, dan pengaturan tidak valid kembali ke nilai bawaan.
+- `renderTugas()` di `src/ui.js` memakai komponen `KartuTugas`, sehingga markup kartu tidak lagi ditulis ulang di `ui.js`.
+
+### Diperbaiki
+- Aplikasi tidak lagi mati saat isi `proyek-tugas:v1` rusak. `muatTugasLokal()` tidak pernah melempar galat dan menyaring item yang bukan objek atau tanpa judul teks (diuji lewat DevTools: JSON rusak dan item rusak).
+
+**Riwayat lengkap:** lihat [CHANGELOG.md](./docs/CHANGELOG.md)
 
 ---
 
