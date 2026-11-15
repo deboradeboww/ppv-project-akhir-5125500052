@@ -108,7 +108,7 @@ Rincian pustaka lain ada di [DEPENDENCIES.md](./DEPENDENCIES.md).
 
 ## 🤖 Penggunaan Asisten AI
 
-Bagian kode berikut dibantu asisten AI (Claude, Anthropic): [isi, misalnya `src/komponen.js`, `src/storage.js`, README ini]. Prompt/tautan percakapan: [isi tautan atau ringkasan prompt].
+Bagian kode berikut dibantu asisten AI (Claude, Anthropic): [isi, misalnya `src/komponen.js`, `src/storage.js`, README ini].
 
 ## 🔗 Tautan Dokumen
 
