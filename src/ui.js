@@ -3,6 +3,7 @@
 import * as State from './state.js';
 import { mainkanKlik, mainkanNotifikasi } from './suara.js';
 import { UiPustaka } from './ui-pustaka.js';
+import { KartuTugas, PesanKosong } from './komponen.js';
 
 // ==========================================
 // REFERENSI ELEMEN (dipakai juga oleh main.js untuk memasang event)
@@ -255,7 +256,12 @@ function perbaruiProgres() {
 
 export function renderTugas() {
     if (!el.taskListContainer) return;
-    el.taskListContainer.innerHTML = '';
+
+    // Beri tahu pengguna sekali saja bila penyimpanan peramban tidak tersedia
+    const peringatan = State.ambilPeringatanPenyimpanan();
+    if (peringatan) tampilkanToast(peringatan);
+
+    el.taskListContainer.replaceChildren();
 
     const filtered = State.saringTugas({
         kategori: el.filterCategory ? el.filterCategory.value : 'Semua',
@@ -267,40 +273,15 @@ export function renderTugas() {
         const emptyText = State.jumlahTugas() === 0
             ? 'Belum ada tugas tersimpan. Silakan isi lewat menu "Input"!'
             : 'Tidak ada tugas yang sesuai dengan filter.';
-        el.taskListContainer.innerHTML = `
-            <div class="empty-state">
-                <img src="assets/empty-task.png" alt="Ilustrasi Tugas Kosong" class="empty-img" width="70">
-                <p>${emptyText}</p>
-            </div>
-        `;
+        el.taskListContainer.appendChild(
+            PesanKosong(emptyText, { gambar: 'assets/empty-task.png', alt: 'Ilustrasi Tugas Kosong' })
+        );
         perbaruiProgres();
         return;
     }
 
-    filtered.forEach((task) => {
-        const card = document.createElement('div');
-        card.className = 'task-card-item';
-        card.innerHTML = `
-            <div class="task-header-row">
-                <span class="task-title-text">${escapeHtml(task.title)}</span>
-                <div class="task-meta-tags">
-                    <span class="tag-badge tag-mk">${escapeHtml(task.category)}</span>
-                    <span class="tag-badge tag-date"><i class="fa-solid fa-calendar"></i> ${escapeHtml(task.deadline)}</span>
-                    <span class="tag-badge tag-prio-${task.priority}">${escapeHtml(task.priority)}</span>
-                </div>
-            </div>
-            <div class="task-footer-row" style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px dashed var(--input-border); padding-top: 8px;">
-                <select class="form-select form-select-sm" style="font-size: 0.75rem; padding: 4px 8px; border-radius: 8px; width: auto;" data-aksi="ubah-status" data-id="${task.id}">
-                    <option value="Belum Selesai" ${task.status === 'Belum Selesai' ? 'selected' : ''}>Belum Selesai</option>
-                    <option value="Sedang Dikerjakan" ${task.status === 'Sedang Dikerjakan' ? 'selected' : ''}>Sedang Dikerjakan</option>
-                    <option value="Selesai" ${task.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
-                </select>
-                <button type="button" class="btn-act btn-edit" data-aksi="edit-tugas" data-id="${task.id}"><i class="fa-solid fa-pen"></i> Edit</button>
-                <button type="button" class="btn-act btn-del" data-aksi="hapus-tugas" data-id="${task.id}"><i class="fa-solid fa-trash"></i> Hapus</button>
-            </div>
-        `;
-        el.taskListContainer.appendChild(card);
-    });
+    // Markup kartu ditulis sekali di komponen.js
+    filtered.forEach((task) => el.taskListContainer.appendChild(KartuTugas(task)));
     perbaruiProgres();
 }
 
@@ -377,12 +358,9 @@ export function renderCatatan() {
     el.notesContainer.innerHTML = '';
 
     if (State.jumlahCatatan() === 0) {
-        el.notesContainer.innerHTML = `
-            <div class="empty-state">
-                <img src="assets/empty-note.png" alt="Ilustrasi Catatan Kosong" class="empty-img" width="70">
-                <p>Belum ada catatan cepat tersimpan.</p>
-            </div>
-        `;
+        el.notesContainer.appendChild(
+            PesanKosong('Belum ada catatan cepat tersimpan.', { gambar: 'assets/empty-note.png', alt: 'Ilustrasi Catatan Kosong' })
+        );
         return;
     }
 
@@ -418,11 +396,9 @@ export function renderJadwal() {
     if (el.addDayBtn) el.addDayBtn.disabled = activeDays.length === State.DAY_ORDER.length;
 
     if (activeDays.length === 0) {
-        el.scheduleContainer.innerHTML = `
-            <div class="empty-state">
-                <p>Belum ada hari di jadwal. Klik "Tambah Hari" untuk mulai!</p>
-            </div>
-        `;
+        el.scheduleContainer.appendChild(
+            PesanKosong('Belum ada hari di jadwal. Klik "Tambah Hari" untuk mulai!')
+        );
         return;
     }
 
