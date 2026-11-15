@@ -101,8 +101,8 @@ Penyimpanan diuji dengan merusak isi `localStorage` lewat DevTools (Application 
 |---|---|
 | Bootstrap 5.3.2 | https://getbootstrap.com |
 | Font Awesome (lokal di `assets/fontawesome`) | https://fontawesome.com |
-| `click.mp3`, `notification.mp3` | [isi sumber dan lisensi] |
-| `empty-note.png`, `empty-task.png` | [isi sumber atau pembuat] |
+| `click.mp3`, `notification.mp3` | [Pixabay] |
+| `empty-note.png`, `empty-task.png` | [AI Gemini] |
 
 Rincian pustaka lain ada di [DEPENDENCIES.md](./DEPENDENCIES.md).
 
