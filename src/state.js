@@ -1,6 +1,9 @@
 // state.js - pemilik data aplikasi (tugas, catatan, jadwal, pengaturan).
 // Aturan: tidak boleh menyentuh DOM, confirm, atau suara.
-import { bacaPengaturanMentah, simpanPengaturanMentah } from './storage.js';
+import {
+    bacaPengaturanMentah, simpanPengaturanMentah,
+    muatTugasLokal, simpanTugasLokal, penyimpananTersedia
+} from './storage.js';
 
 // ---------- Konstanta ----------
 export const APP_VERSION = 'v5';
@@ -8,6 +11,8 @@ export const DAY_ORDER = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", 
 
 const ALLOWED_AVATARS = ['fa-user', 'fa-user-graduate', 'fa-cat', 'fa-ghost', 'fa-rocket', 'fa-heart'];
 const ALLOWED_FONTS = ['kecil', 'sedang', 'besar'];
+const STATUS_VALID = ['Belum Selesai', 'Sedang Dikerjakan', 'Selesai'];
+const PRIORITAS_DEFAULT = 'Sedang'; // dipakai bila prioritas pada data tersimpan rusak; sesuaikan dengan pilihan di form
 
 const defaultSettings = {
     sound: true,
@@ -16,23 +21,48 @@ const defaultSettings = {
     profile: { name: 'Debo', campus: '', avatar: 'fa-user' }
 };
 
+// ---------- Peringatan penyimpanan ----------
+// state.js bebas DOM, jadi pesan hanya disimpan di sini; ui.js yang menampilkannya sebagai toast.
+let sudahDiperingatkan = false;
+let peringatanTertunda = null;
+
+function laporkanPenyimpanan(berhasil) {
+    if (berhasil || sudahDiperingatkan) return;
+    sudahDiperingatkan = true;
+    peringatanTertunda = 'Penyimpanan peramban tidak tersedia, jadi data tidak akan tersimpan setelah halaman ditutup.';
+}
+
+// Mengembalikan pesan sekali saja (lalu dikosongkan), atau null bila tidak ada.
+export function ambilPeringatanPenyimpanan() {
+    const pesan = peringatanTertunda;
+    peringatanTertunda = null;
+    return pesan;
+}
+
 // ---------- Pengaturan ----------
+// Hanya nilai bertipe benar yang dipakai; sisanya kembali ke bawaan.
 function muatPengaturan() {
+    const hasil = JSON.parse(JSON.stringify(defaultSettings));
     const raw = bacaPengaturanMentah();
-    if (raw && typeof raw === 'object') {
-        const merged = {
-            ...defaultSettings,
-            ...raw,
-            profile: { ...defaultSettings.profile, ...(raw.profile || {}) }
-        };
-        if (!ALLOWED_FONTS.includes(merged.font)) merged.font = 'sedang';
-        if (!ALLOWED_AVATARS.includes(merged.profile.avatar)) merged.profile.avatar = 'fa-user';
-        return merged;
+    if (!raw) return hasil;
+
+    if (typeof raw.sound === 'boolean') hasil.sound = raw.sound;
+    if (typeof raw.dark === 'boolean') hasil.dark = raw.dark;
+    if (ALLOWED_FONTS.includes(raw.font)) hasil.font = raw.font;
+
+    const p = raw.profile;
+    if (p && typeof p === 'object' && !Array.isArray(p)) {
+        if (typeof p.name === 'string' && p.name.trim()) hasil.profile.name = p.name;
+        if (typeof p.campus === 'string') hasil.profile.campus = p.campus;
+        if (ALLOWED_AVATARS.includes(p.avatar)) hasil.profile.avatar = p.avatar;
     }
-    return JSON.parse(JSON.stringify(defaultSettings));
+    return hasil;
 }
 
 const settings = muatPengaturan();
+laporkanPenyimpanan(penyimpananTersedia());
+
+function simpanPengaturan() { laporkanPenyimpanan(simpanPengaturanMentah(settings)); }
 
 export function ambilPengaturan() { return settings; }
 export function suaraAktif() { return !!settings.sound; }
@@ -40,29 +70,50 @@ export function avatarValid(icon) { return ALLOWED_AVATARS.includes(icon); }
 
 export function ubahSuara(aktif) {
     settings.sound = aktif;
-    simpanPengaturanMentah(settings);
+    simpanPengaturan();
 }
 
 export function ubahGelap(gelap) {
     settings.dark = gelap;
-    simpanPengaturanMentah(settings);
+    simpanPengaturan();
 }
 
 // Mengembalikan false kalau ukuran font tidak diizinkan
 export function ubahFont(ukuran) {
     if (!ALLOWED_FONTS.includes(ukuran)) return false;
     settings.font = ukuran;
-    simpanPengaturanMentah(settings);
+    simpanPengaturan();
     return true;
 }
 
 export function simpanProfil(profil) {
     settings.profile = profil;
-    simpanPengaturanMentah(settings);
+    simpanPengaturan();
 }
 
 // ---------- Tugas ----------
-let taskListArray = [];
+// Merapikan data dari penyimpanan: tipe dipastikan benar, id dipastikan ada dan unik.
+function rapikanTugas(daftar) {
+    const idDipakai = new Set();
+    return daftar.map((t, i) => {
+        let id = (typeof t.id === 'string' || typeof t.id === 'number') ? String(t.id) : '';
+        if (!id || idDipakai.has(id)) id = 't_' + Date.now() + '_' + i;
+        idDipakai.add(id);
+        return {
+            id,
+            title: t.title,
+            category: typeof t.category === 'string' ? t.category : '',
+            deadline: typeof t.deadline === 'string' ? t.deadline : '',
+            priority: typeof t.priority === 'string' && t.priority ? t.priority : PRIORITAS_DEFAULT,
+            status: STATUS_VALID.includes(t.status) ? t.status : 'Belum Selesai'
+        };
+    });
+}
+
+let taskListArray = rapikanTugas(muatTugasLokal());
+laporkanPenyimpanan(penyimpananTersedia());
+
+function simpanTugas() { laporkanPenyimpanan(simpanTugasLokal(taskListArray)); }
 
 export function jumlahTugas() { return taskListArray.length; }
 
@@ -89,21 +140,25 @@ export function hitungProgres() {
 export function tambahTugas({ title, category, deadline, priority, status }) {
     const tugas = { id: 't_' + Date.now(), title, category, deadline, priority, status };
     taskListArray.push(tugas);
+    simpanTugas();
     return tugas;
 }
 
 export function ubahStatusTugas(id, statusBaru) {
-    taskListArray = taskListArray.map(t => t.id === id ? { ...t, status: statusBaru } : t);
+    taskListArray = taskListArray.map(t => String(t.id) === String(id) ? { ...t, status: statusBaru } : t);
+    simpanTugas();
 }
 
 export function ubahTugas(id, { title, category, deadline, priority }) {
     taskListArray = taskListArray.map(t =>
         String(t.id) === String(id) ? { ...t, title, category, deadline, priority } : t
     );
+    simpanTugas();
 }
 
 export function hapusTugas(id) {
-    taskListArray = taskListArray.filter(t => t.id !== id);
+    taskListArray = taskListArray.filter(t => String(t.id) !== String(id));
+    simpanTugas();
 }
 
 // ---------- Catatan cepat ----------
